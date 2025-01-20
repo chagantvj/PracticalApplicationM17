@@ -6,80 +6,68 @@ Project: Module 17 Practical Application Example 3
 Dataset information
 ---
 
-*The provided dataset contains information on 426K cars to ensure speed of processing. Your goal is to understand what factors make a car more or less expensive. As a result of your analysis, you should provide clear recommendations to your client -- a used car dealership -- as to what consumers value in a used car.*
+*The provided dataset contains information on 41188 customers 
 
-*Given dataset has 426880 entries with 18 columns*
+*Given dataset has 41188 entries with 21 columns*
 
-*Data Source: https://github.com/chagantvj/PracticalApplicationM10/blob/main/vehicles.csv.zip*
+*Data Source: https://github.com/chagantvj/PracticalApplicationM17/blob/main/bank-additional-full.csv*
 
 *Python Code: https://github.com/chagantvj/PracticalApplicationM10/blob/main/VijayChaganti_Module17_Practical_Example3.ipynb*
-
-*Note: There are no errors in the code, but FutureWarning due to usage of replace=inplace option.*
 
 **Date Understanding and Cleaning**
 ---
 *Total entries for each column of the data frame is 12684.*
 
-*There is some data missing for Columsn car, Bar, CoffeeHouse, CarryAway, RestaurantLessThan20 and Restaurant20To50.*
-
 ```
-Many columns have missing data up to 40+ pergentage and
-many columns are irrelevant to the price of car such as VIN, drive, paint_color, state, id etc
+From data given,
+1. column named 'default', 'housing' and 'loan' is going to play active role on cusomers comitting to a term plan that is going to put financial strain on an individual.
+2. Given priority for above three columns removing 'unknown' rows from these three columsn. Numbers of unknowns are very in-significant compared to the rows that has valid data like yes or no.
+3. Column named 'job' has lot many variants that can lead over fitting of a model and hence igonored it.
+4. Columns named cpi, cci, employed etc are given less proority as that data is not going to play any active role on an individual to choose to either commit for a term loan or not.
 
-df.isna().mean().round(4)*100
-id               0.00
-region           0.00
-price            0.00
-year             0.28
-manufacturer     4.13
-model            1.24
-condition       40.79
-cylinders       41.62
-fuel             0.71
-odometer         1.03
-title_status     1.93
-transmission     0.60
-VIN             37.73
-drive           30.59
-size            71.77
-type            21.75
-paint_color     30.50
-state            0.00
-dtype: float64
-
-p = [0.05, 0.85, 0.95, 0.99]
-df[['price']].describe(p)
-price
-count	426880.00
-mean	75199.03
-std	12182282.17
-min	0.00
-5%	0.00
-50%	13950.00
-85%	32995.00
-95%	44500.00
-99%	66995.00
-max	3736928711.00
+ #   Column       Non-Null Count  Dtype  
+---  ------       --------------  -----  
+ 0   age          41188 non-null  int64  
+ 1   job          41188 non-null  object 
+ 2   marital      41188 non-null  object 
+ 3   education    41188 non-null  object 
+ 4   default      41188 non-null  object 
+ 5   housing      41188 non-null  object 
+ 6   loan         41188 non-null  object 
+ 7   contact      41188 non-null  object 
+ 8   month        41188 non-null  object 
+ 9   day_of_week  41188 non-null  object 
+ 10  duration     41188 non-null  int64  
+ 11  campaign     41188 non-null  int64  
+ 12  pdays        41188 non-null  int64  
+ 13  previous     41188 non-null  int64  
+ 14  poutcome     41188 non-null  object 
+ 15  evr          41188 non-null  float64
+ 16  cpi          41188 non-null  float64
+ 17  cci          41188 non-null  float64
+ 18  e3m          41188 non-null  float64
+ 19  employed     41188 non-null  float64
+ 20  y            41188 non-null  object 
 ```
 
-**Replaced NaN and INF values in price column with mean of price!* and no duplicate data found*
+**Removing unknown data from columns and imputate categorical to numerical data*
 ---
 ```
-has_nan = df['price'].isna().any().sum() 
-has_inf = np.isinf(df['price']).any().sum()
-df_cleaned = df[~np.isinf(df['price'])]
-has_inf = np.isinf(df_cleaned['price']).any().sum()
-print(has_nan)
-#  0
-print(has_inf)
-#  0
+countUnknown = (dfm == 'unknown').any(axis=1).sum()
+print(countUnknown)
+# 9359
 
-sum(df.duplicated()) ## O duplicates found
-#  0
+dfm = dfm[~dfm[['loan', 'housing', 'default']].isin(['unknown']).any(axis=1)]
+
+dfm['y'].mean()
+dfm['loan'] = dfm['loan'].replace({'yes': 1, 'no': 0})
+dfm['default'] = dfm['default'].replace({'yes': 1, 'no': 0})
+dfm['housing'] = dfm['housing'].replace({'yes': 1, 'no': 0})
+
 ```
-**Boxplot of price log**
+**Histograms of given dataset**
 ---
-<img width="654" alt="Screenshot 2024-11-17 at 10 54 37 PM" src="https://github.com/user-attachments/assets/b9b2ec9b-02c8-4593-8533-e4f5fb4c5b6f">
+![Screen Shot 2025-01-20 at 12 58 56 PM](https://github.com/user-attachments/assets/c8de55bc-dfda-4fcc-81fd-c7dc26d7a656)
 
 **Histogram plot of log of price**
 ---
