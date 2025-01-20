@@ -12,7 +12,7 @@ Dataset information
 
 *Data Source: https://github.com/chagantvj/PracticalApplicationM10/blob/main/vehicles.csv.zip*
 
-*Python Code: https://github.com/chagantvj/PracticalApplicationM10/blob/main/VijayChaganti_Module10_Practical_Example2.ipynb*
+*Python Code: https://github.com/chagantvj/PracticalApplicationM10/blob/main/VijayChaganti_Module17_Practical_Example3.ipynb*
 
 *Note: There are no errors in the code, but FutureWarning due to usage of replace=inplace option.*
 
