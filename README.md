@@ -50,7 +50,7 @@ From data given,
  20  y            41188 non-null  object 
 ```
 
-**Removing unknown data from columns and imputate categorical to numerical data*
+*Removing unknown data from columns and imputate categorical to numerical data*
 ---
 ```
 countUnknown = (dfm == 'unknown').any(axis=1).sum()
@@ -86,7 +86,7 @@ dfm['housing'] = dfm['housing'].replace({'yes': 1, 'no': 0})
 ```
 **Heatmaps withput columns 'loan', 'housing' and 'default'**
 ![Screen Shot 2025-01-20 at 1 08 43 PM](https://github.com/user-attachments/assets/3b74efff-fdd2-43e6-a8a8-e9064482d1fd)
-
+---
 **Heatmaps with columns 'loan', 'housing' and 'default'**
 ![Screen Shot 2025-01-20 at 1 09 04 PM](https://github.com/user-attachments/assets/9e614602-adc1-4ad4-8824-ec89d1bcf43a)
 ---
@@ -147,16 +147,16 @@ for model_name, model in models.items():
         'Train Accuracy': train_accuracy,
         'Runtime': runtime
     }
+```
+**Model Comparison**
 
-Model Comparison:
-
+```
                      Test Accuracy  Train Accuracy     Runtime
 KNN                       0.886706        0.916474    0.035695
 Logistic Regression       0.880578        0.877696    0.119656
 Decision Tree             0.858265        0.999175    0.078799
 SVM                       0.877121        0.875850  102.151783
 ```
-
 **Improving Model**
 ---
 ```
@@ -206,20 +206,7 @@ print(f"Best Score for Decision Tree: {grid_search_dt.best_score_}")
        'classifier__min_samples_split': 2
 >>> Best Score for Decision Tree: 0.8885789283372676
 ```
-
-
 Conclusion & Recommendation
 ---
+From different models and its results, Its almost clear that the test accuracy is between 0.85 to 0.89 which is also close to the best score given by Decision Tree and also for KNN. From this I can conclue that these models can be used for accurately predicting if the client will be subscribed for term products offered by the bank.
 
-Out of all the columns gien in dataset, columns named 'region', 'manufacturer', 'model', 'drive', 'size', 'type', 'paint_color' & 'state' as too many categorical variables that will be overfitting the model and hence ignored those column data. If we apply One-Hot encoding on those columns, its going to generate 100s of columns which will overload the model to process.
-
-Column named 'id', 'VIN', 'fuel', & 'cylinders' does not play a role on car price and hence dropped from the DataSet
-
-Column named 'odometer', 'title_status' & 'condition' is going to play a role as per domain knowledge that I have and hence considered for modeling.
-Applied one-hot encoding on catorigical data like 'title_status' & 'condition' and applied three different models like Linear-Regression, Losso-Regression and Ridge-Regression and all these three models gives almost ~0 on Train_R2_Score and Test_R2_Score. This shows the the models are under-fit and hence not able to predict actual price of the model
-
-This under-fitting could be due to the 'most_frequent' imputer method used to fillin missing data for columns 'title_status' & 'condition'.
-
-Violin plot on 'title_status' VS PriceLog & 'condition' VS PriceLog shows that the dependency is almost close to mean of the given data and hence the model. This data suggests that the model might be able to predict actual value given the data considered for models designed.
-
-Overall the suggestions
