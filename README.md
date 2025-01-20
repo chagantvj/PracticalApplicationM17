@@ -69,84 +69,144 @@ dfm['housing'] = dfm['housing'].replace({'yes': 1, 'no': 0})
 ---
 ![Screen Shot 2025-01-20 at 12 58 56 PM](https://github.com/user-attachments/assets/c8de55bc-dfda-4fcc-81fd-c7dc26d7a656)
 
-**Histogram plot of log of price**
+**Line graph for average calls per campaign**
 ---
-<img width="653" alt="Screenshot 2024-11-17 at 10 56 37 PM" src="https://github.com/user-attachments/assets/4339f799-d9b3-4659-b8f8-96a1643c7f0e">
+![Screen Shot 2025-01-20 at 1 06 26 PM](https://github.com/user-attachments/assets/c1dc553b-9a25-4941-95ff-81b5af28844a)
 
-**Lost data with Z-SCORE (< 1%) vs IRQ (98%)**
----
-```
-zscore_data_lost = 1 - (df_zscore.shape[0]/df.shape[0])
-print("We lost {:.6%} of the data by the z-score method" .format(zscore_data_lost))
-# We lost 0.007262% of the data by the z-score method <---- We lost only less than 1% of data using zscore
-df_zscore['price'].describe()
-count    426849.00
-mean      17552.14
-std       20667.53
-min           0.00
-25%        5900.00
-50%       13950.00
-75%       26455.00
-max     5000000.00
-
-irq_data_lost = 1 - (df_irq.shape[0]/df.shape[0])
-print("We lost {:.2%} of the data by the IRQ method" .format(irq_data_lost))
-# We lost 98.08% of the data by the IRQ method <--- We lost almost 98% of data with IRQ method of eliminating data which is not good.
-df_irq['price'].describe()
-count         8177.00
-mean       3088930.26
-std       87973256.90
-min          57400.00
-25%          61000.00
-50%          67995.00
-75%          77999.00
-max     3736928711.00 
-```
-**Violin plot of title_status vs price log**
----
-<img width="716" alt="Screenshot 2024-11-17 at 11 07 29 PM" src="https://github.com/user-attachments/assets/ddf85b84-473f-4f66-9387-f1788c5b27ef">
-
-**Violin plot of condition vs price log**
----
-<img width="654" alt="Screenshot 2024-11-17 at 11 07 57 PM" src="https://github.com/user-attachments/assets/abf1c186-cb5d-4945-a6e3-f51581c2e25f">
-
-
-**Train & Test data with 20% Test Size and random state as 23**
----
-**Applied One-Hot Encoding on Nominal category of columns like title_status & condition**
+**Code for data processing**
 ---
 ```
-dfc = df[['condition', 'title_status', 'odometer’]]
-X = dfc[['condition', 'title_status', 'odometer']]
-y = df_numeric['price']
-X_train, X_test, y_train, y_test = train_test_split(X,y,test_size = 0.20,random_state=23)
+dfm = df.drop(['marital','job','education','month','day_of_week','pdays','previous','poutcome','cpi','cci','evr','e3m','contact'], axis=1)
+dfm = dfm[~dfm[['loan', 'housing', 'default']].isin(['unknown']).any(axis=1)]
+dfm['y'].mean()
+dfm['loan'] = dfm['loan'].replace({'yes': 1, 'no': 0})
+dfm['default'] = dfm['default'].replace({'yes': 1, 'no': 0})
+dfm['housing'] = dfm['housing'].replace({'yes': 1, 'no': 0})
 
-from sklearn import set_config
-set_config(transform_output="pandas")
-from sklearn.impute import SimpleImputer
+```
+**Heatmaps withput columns 'loan', 'housing' and 'default'**
+![Screen Shot 2025-01-20 at 1 08 43 PM](https://github.com/user-attachments/assets/3b74efff-fdd2-43e6-a8a8-e9064482d1fd)
 
-si = SimpleImputer(strategy = "most_frequent")
-X_train = si.fit_transform(X_train)
-X_test = si.transform(X_test)
+**Heatmaps with columns 'loan', 'housing' and 'default'**
+![Screen Shot 2025-01-20 at 1 09 04 PM](https://github.com/user-attachments/assets/9e614602-adc1-4ad4-8824-ec89d1bcf43a)
+---
 
-pd.get_dummies(dfc.select_dtypes("object"), dtype = int, drop_first = True)
-# 426880 rows × 10 columns
+**Code for modeling**
+```
+X = dfm.drop(columns = 'y')
+y = dfm['y']
+X_train, X_test, y_train, y_test = train_test_split(X,y,test_size = 0.2, random_state = 2)
+num_columns = X_train.select_dtypes(["int","float"]).columns
+num_transformer = StandardScaler()
+preprocessor = ColumnTransformer(transformers=[('num',num_transformer,num_columns)])
+pipeline = Pipeline(steps = [("preprocessor",preprocessor),("classifier",LogisticRegression())])
+pipeline.fit(X_train, y_train)
+print(f"Train data accuracy: {pipeline.score(X_train, y_train):.2f}")
+print(f"Test data accuracy: {pipeline.score(X_test, y_test):.2f}")
 
-y.mean().round(1)
-# 75199.0 
+##Train data accuracy: 0.89
+## Test data accuracy: 0.89
 ```
 
-**Linear Regression**
+**Confusion Matrix**
 ---
-<img width="1109" alt="Screenshot 2024-11-18 at 7 10 53 PM" src="https://github.com/user-attachments/assets/7e249944-8fbd-4567-915c-7f62d18cbfd9">
+![Screen Shot 2025-01-20 at 1 19 50 PM](https://github.com/user-attachments/assets/a940f6dd-5682-4e93-8917-caf895210975)
 
-**Losso Regression**
+**Code for Model Comparison**
 ---
-<img width="1137" alt="Screenshot 2024-11-18 at 10 36 15 PM" src="https://github.com/user-attachments/assets/c7fda4ee-c558-421c-9372-3ba8bf133f18">
+```
+models = {
+    'KNN': KNeighborsClassifier(),
+    'Logistic Regression': LogisticRegression(),
+    'Decision Tree': DecisionTreeClassifier(),
+    'SVM': SVC(probability=True)  # SVM with probability estimates
+}
 
-**Ridge Regression**
+for model_name, model in models.items():
+    print(f"Training {model_name}...")
+
+    start_time = time.time()
+    # Fit the model
+    model.fit(X_train, y_train)
+    end_time = time.time()
+    runtime = end_time - start_time
+    # Predict on the test set
+    y_pred_test = model.predict(X_test)
+    y_pred_prob_test = model.predict_proba(X_test)[:, 1]  # Probabilities for the positive class
+    
+    y_pred_train = model.predict(X_train)
+    y_pred_prob_train = model.predict_proba(X_train)[:, 1]  # Probabilities for the positive class
+
+    # Calculate evaluation metrics
+    test_accuracy = accuracy_score(y_test, y_pred_test)
+    train_accuracy = accuracy_score(y_train, y_pred_train)
+
+    # Store the results
+    results[model_name] = {
+        'Test Accuracy': test_accuracy,
+        'Train Accuracy': train_accuracy,
+        'Runtime': runtime
+    }
+
+Model Comparison:
+
+                     Test Accuracy  Train Accuracy     Runtime
+KNN                       0.886706        0.916474    0.035695
+Logistic Regression       0.880578        0.877696    0.119656
+Decision Tree             0.858265        0.999175    0.078799
+SVM                       0.877121        0.875850  102.151783
+```
+
+**Improving Model**
 ---
-<img width="1135" alt="Screenshot 2024-11-18 at 10 37 23 PM" src="https://github.com/user-attachments/assets/53bb46a5-edd7-4f10-b5bc-30fe40a19b86">
+```
+pipeline = Pipeline(steps = [("preprocessor",preprocessor),("classifier",KNeighborsClassifier())])
+knn = KNeighborsClassifier()
+
+param_grid_knn = {
+    'classifier__n_neighbors': [3, 5, 7, 9, 11],
+    'classifier__weights': ['uniform', 'distance'],
+    'classifier__p': [1, 2]
+}
+
+grid_search_knn = GridSearchCV(pipeline, param_grid_knn, cv=5, scoring='accuracy', verbose=1)
+grid_search_knn.fit(X_train, y_train)
+
+print(f"Best Parameters for KNN: {grid_search_knn.best_params_}")
+print(f"Best Score for KNN: {grid_search_knn.best_score_}")
+
+# Example for Decision Tree
+pipeline = Pipeline(steps = [("preprocessor",preprocessor),("classifier",DecisionTreeClassifier())])
+dt = DecisionTreeClassifier()
+
+param_grid_dt = {
+    'classifier__max_depth': [None, 10, 20, 30],
+    'classifier__min_samples_split': [2, 5, 10],
+    'classifier__min_samples_leaf': [1, 2, 4]
+}
+
+grid_search_dt = GridSearchCV(pipeline, param_grid_dt, cv=5, scoring='accuracy', verbose=1)
+grid_search_dt.fit(X_train, y_train)
+
+print(f"Best Parameters for Decision Tree: {grid_search_dt.best_params_}")
+print(f"Best Score for Decision Tree: {grid_search_dt.best_score_}")
+
+>>> Fitting 5 folds for each of 20 candidates, totalling 100 fits
+    Best Parameters for KNN:
+    'classifier__n_neighbors': 11,
+    'classifier__p': 2,
+    'classifier__weights': 'uniform'
+>>> Best Score for KNN: 0.8896003232330717
+
+
+>>> Fitting 5 folds for each of 36 candidates, totalling 180 fits
+    Best Parameters for Decision Tree:
+       'classifier__max_depth': 10,
+       'classifier__min_samples_leaf': 2,
+       'classifier__min_samples_split': 2
+>>> Best Score for Decision Tree: 0.8885789283372676
+```
+
 
 Conclusion & Recommendation
 ---
